@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Apresentação Reveal.js da Unidade 1 de Aprendizagem de Máquina sobre fundamentos teóricos da aprendizagem.">
+  <title>Unidade 1 — Fundamentos teóricos da aprendizagem</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reset.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/white.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/highlight/monokai.css">
+  <link rel="stylesheet" href="./css/custom.css">
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <section class="cover" data-background-gradient="linear-gradient(135deg,#f8fbfd 0%,#e8f1f7 42%,#cfe2ef 100%)">
+        <p class="kicker">Aprendizagem de Máquina · Unidade 1</p>
+        <h1>Fundamentos teóricos da aprendizagem</h1>
+        <p class="subtitle">Generalização, aproximação de função, viés, variância, capacidade, complexidade e diagnóstico de modelos.</p>
+        <div class="cover-grid">
+          <span>12 aulas</span>
+          <span>2 semanas</span>
+          <span>teoria + laboratório</span>
+        </div>
+        <aside class="notes">Abrir a unidade reforçando a mudança de postura: sair de “treinar modelo” para “projetar experimento confiável”.</aside>
+      </section>
+
+      <section>
+        <p class="section-label">Questão orientadora</p>
+        <h2>Se o resultado no treino é ótimo, por que isso não prova que o modelo aprendeu?</h2>
+        <div class="big-statement fragment fade-up">Porque aprender não é memorizar os dados vistos.</div>
+        <div class="big-statement ghost fragment fade-up">Aprender é manter desempenho quando o mundo entrega novos casos.</div>
+        <p class="source">Base conceitual: erro empírico × erro de generalização em teoria da aprendizagem — CS229, Stanford.</p>
+        <aside class="notes">Pedir exemplos do cotidiano: decorar respostas de uma prova vs resolver problemas novos.</aside>
+      </section>
+
+      <section>
+        <p class="section-label">Mapa da unidade</p>
+        <h2>O caminho das próximas duas semanas</h2>
+        <div class="roadmap">
+          <div class="road-item fragment fade-up"><b>1</b><span>Aproximação de função</span><small>o que o modelo tenta aprender</small></div>
+          <div class="road-item fragment fade-up"><b>2</b><span>Risco empírico × esperado</span><small>o que medimos e o que queremos</small></div>
+          <div class="road-item fragment fade-up"><b>3</b><span>Viés e variância</span><small>por que modelos falham</small></div>
+          <div class="road-item fragment fade-up"><b>4</b><span>Capacidade e complexidade</span><small>controle da flexibilidade</small></div>
+          <div class="road-item fragment fade-up"><b>5</b><span>Diagnóstico</span><small>dados, modelo, otimização ou avaliação?</small></div>
+        </div>
+      </section>
+
+      <section>
+        <p class="section-label">Frase de impacto</p>
+        <h2>O placar do treino é uma lembrança do passado</h2>
+        <div class="quote-box">
+          <p>O objetivo de Machine Learning não é vencer o conjunto de treino; é tomar decisões melhores em dados ainda não observados.</p>
+        </div>
+        <div class="two-col mt-md">
+          <div class="soft-card fragment fade-right"><b>Treino</b><p>Mostra como o modelo se ajustou ao conjunto usado para aprender.</p></div>
+          <div class="soft-card fragment fade-left"><b>Generalização</b><p>Estima o comportamento esperado em novas amostras da mesma população.</p></div>
+        </div>
+      </section>
+
+      <section data-auto-animate>
+        <p class="section-label">1.1 · Aproximação de função</p>
+        <h2 data-id="func-title">Aprender é aproximar uma função desconhecida</h2>
+        <div class="function-stage">
+          <div class="world" data-id="world">Mundo real</div>
+          <div class="arrow">→</div>
+          <div class="sample" data-id="sample">Dados observados</div>
+        </div>
+        <p class="source">Vapnik descreve aprendizagem como estimação de função a partir de dados empíricos; ver The Nature of Statistical Learning Theory.</p>
+      </section>
+
+      <section data-auto-animate>
+        <p class="section-label">1.1 · Aproximação de função</p>
+        <h2 data-id="func-title">Aprender é aproximar uma função desconhecida</h2>
+        <div class="function-stage expanded">
+          <div class="world" data-id="world">Distribuição desconhecida<br><small>P(X,Y)</small></div>
+          <div class="arrow">→</div>
+          <div class="sample" data-id="sample">Amostra<br><small>D = {(xᵢ,yᵢ)}</small></div>
+          <div class="arrow">→</div>
+          <div class="model">Hipótese<br><small>f̂ ∈ H</small></div>
+          <div class="arrow">→</div>
+          <div class="future">Novos casos<br><small>generalização</small></div>
+        </div>
+        <p class="takeaway fragment fade-up">O conjunto de dados não é o mundo. É uma fotografia parcial do mundo.</p>
+      </section>
+
+      <section>
+        <p class="section-label">Dados como amostra</p>
+        <h2>O dataset é uma amostra, não a realidade completa</h2>
+        <div class="sample-visual">
+          <div class="population">
+            <span></span><span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <div class="sample-card fragment fade-left">
+            <b>Amostra observada</b>
+            <p>Um recorte finito, enviesado por coleta, contexto, tempo, instrumentos, escolhas humanas e disponibilidade.</p>
+          </div>
+        </div>
+        <p class="impact fragment fade-up">Quando a amostra muda, a verdade operacional do modelo também pode mudar.</p>
+      </section>
+
+      <section>
+        <p class="section-label">X, Y e distribuição</p>
+        <h2>A tríade invisível do aprendizado supervisionado</h2>
+        <div class="triad">
+          <div class="triad-node fragment zoom-in"><b>X</b><span>entradas, atributos, sinais observáveis</span></div>
+          <div class="triad-node fragment zoom-in"><b>Y</b><span>alvo, resposta, variável que queremos prever</span></div>
+          <div class="triad-node fragment zoom-in"><b>P(X,Y)</b><span>distribuição conjunta desconhecida</span></div>
+        </div>
+        <div class="formula-card mt-md fragment fade-up">
+          <code>D = {(x₁,y₁), …, (xₙ,yₙ)}</code>
+          <p>O modelo vê <strong>D</strong>, mas queremos desempenho em novas amostras de <strong>P(X,Y)</strong>.</p>
+        </div>
+        <p class="source">A distinção entre distribuição desconhecida, amostra e erro de generalização é central nas notas de Learning Theory do CS229.</p>
+      </section>
+
+      <section>
+        <p class="section-label">Função-alvo</p>
+        <h2>A função que queremos talvez nunca seja observada diretamente</h2>
+        <div class="two-col">
+          <div class="soft-card">
+            <b>Função-alvo</b>
+            <p>A relação ideal que conecta entradas e saídas no fenômeno estudado.</p>
+            <code>f*: X → Y</code>
+          </div>
+          <div class="soft-card fragment fade-left">
+            <b>Modelo aprendido</b>
+            <p>Uma aproximação escolhida a partir de dados, algoritmo, restrições e hipótese.</p>
+            <code>f̂ ∈ H</code>
+          </div>
+        </div>
+        <p class="impact fragment fade-up">Todo modelo é uma aposta: “essa família de funções é suficiente para aproximar o fenômeno?”</p>
+      </section>
+
+      <section>
+        <p class="section-label">Hipótese</p>
+        <h2>Um modelo é uma hipótese computável</h2>
+        <div class="hypothesis-grid">
+          <div class="hyp-card fragment fade-up"><b>Hipótese</b><span>uma função candidata que transforma X em uma previsão</span></div>
+          <div class="hyp-card fragment fade-up"><b>Espaço de hipóteses</b><span>conjunto de funções que o algoritmo pode escolher</span></div>
+          <div class="hyp-card fragment fade-up"><b>Algoritmo de aprendizagem</b><span>procedimento que escolhe uma hipótese com base nos dados</span></div>
+        </div>
+        <p class="source">O formalismo de hipótese e espaço de hipóteses é usado em teoria da aprendizagem estatística e em cursos como CS229.</p>
+      </section>
+
+      <section>
+        <p class="section-label">Espaço de hipóteses</p>
+        <h2>O algoritmo só encontra soluções dentro do mundo que permitimos que ele explore</h2>
+        <div class="space-diagram">
+          <div class="space big"><span>H</span><small>espaço de hipóteses</small></div>
+          <div class="space small one fragment fade-in"><span>linear</span></div>
+          <div class="space small two fragment fade-in"><span>polinomial</span></div>
+          <div class="space small three fragment fade-in"><span>árvores</span></div>
+        </div>
+        <p class="impact fragment fade-up">Se a função verdadeira está fora do espaço de hipóteses, mais treino não resolve sozinho.</p>
+      </section>
+
+      <section>
+        <p class="section-label">Parâmetros × hiperparâmetros</p>
+        <h2>Nem tudo que muda no modelo é aprendido do mesmo jeito</h2>
+        <div class="compare-panels">
+          <div class="panel fragment fade-right">
+            <b>Parâmetros</b>
+            <p>Aprendidos diretamente durante o treinamento.</p>
+            <ul>
+              <li>coeficientes da regressão</li>
+              <li>pesos de uma rede neural</li>
+              <li>centros de clusters</li>
+            </ul>
+          </div>
+          <div class="panel fragment fade-left">
+            <b>Hiperparâmetros</b>
+            <p>Definidos antes ou ajustados por validação.</p>
+            <ul>
+              <li>grau do polinômio</li>
+              <li>força de regularização</li>
+              <li>taxa de aprendizado</li>
+            </ul>
+          </div>
+        </div>
+        <p class="takeaway fragment fade-up">Parâmetros respondem aos dados de treino; hiperparâmetros respondem ao desenho experimental.</p>
+      </section>
+
+      <section>
+        <p class="section-label">Risco</p>
+        <h2>O que queremos minimizar não pode ser calculado diretamente</h2>
+        <div class="risk-flow">
+          <div class="risk-card"><b>Risco esperado</b><code>R(f)</code><span>erro médio em novos dados da distribuição real</span></div>
+          <div class="risk-gap fragment fade-in">≠</div>
+          <div class="risk-card fragment fade-left"><b>Risco empírico</b><code>R̂(f)</code><span>erro médio no conjunto observado</span></div>
+        </div>
+        <p class="source">Em ERM, o risco verdadeiro depende da distribuição desconhecida; por isso se minimiza uma estimativa empírica construída com a amostra.</p>
+      </section>
+
+      <section>
+        <p class="section-label">Formalização</p>
+        <h2>Minimização do risco empírico</h2>
+        <div class="math-hero">
+          \[
+            \hat f = \arg\min_{f \in \mathcal H}\hat R(f)
+          \]
+        </div>
+        <div class="explain-grid">
+          <div class="soft-card fragment fade-up"><b>\(\mathcal H\)</b><p>classe de funções candidatas.</p></div>
+          <div class="soft-card fragment fade-up"><b>\(\hat R(f)\)</b><p>erro observado no conjunto de treino.</p></div>
+          <div class="soft-card fragment fade-up"><b>\(\hat f\)</b><p>modelo escolhido pelo algoritmo.</p></div>
+        </div>
+        <p class="source">Vapnik popularizou a teoria de minimização do risco empírico como base da aprendizagem estatística.</p>
+      </section>
+
+      <section>
+        <p class="section-label">Analogia</p>
+        <h2>Treinar para a prova ou aprender a matéria?</h2>
+        <div class="analogy">
+          <div class="student-card fragment fade-right"><span>📘</span><b>Aluno decorou a lista</b><p>Excelente nos exercícios já vistos.</p><small>baixo erro de treino</small></div>
+          <div class="student-card fragment fade-left"><span>🧠</span><b>Aluno entendeu o conceito</b><p>Resolve variações que nunca viu.</p><small>boa generalização</small></div>
+        </div>
+        <p class="impact fragment fade-up">Um modelo superajustado é o aluno que decorou a lista de exercícios — e entra em pânico quando a pergunta muda.</p>
+      </section>
+
+      <section>
+        <p class="section-label">Treino × generalização</p>
+        <h2>Dois erros, duas perguntas diferentes</h2>
+        <div class="two-col">
+          <div class="soft-card">
+            <b>Erro de treinamento</b>
+            <p>“O modelo reproduz os dados que viu?”</p>
+            <code>R̂(f)</code>
+          </div>
+          <div class="soft-card fragment fade-left">
+            <b>Erro de generalização</b>
+            <p>“O modelo funciona em novos casos?”</p>
+            <code>R(f)</code>
+          </div>
+        </div>
+        <p class="takeaway fragment fade-up">O erro de treino é observável; o erro de generalização é estimado.</p>
+      </section>
+
+      <section data-auto-animate>
+        <p class="section-label">Interpolação</p>
+        <h2 data-id="iex-title">Interpolar é prever dentro da região conhecida</h2>
+        <div class="chart-card" data-id="chart">
+          <svg viewBox="0 0 780 360" role="img" aria-label="Interpolação">
+            <line x1="60" y1="310" x2="740" y2="310" class="axis"/>
+            <line x1="60" y1="310" x2="60" y2="40" class="axis"/>
+            <path d="M70 245 C160 120, 260 100, 350 175 S540 270, 690 105" class="curve"/>
+            <circle cx="135" cy="165" r="8" class="point"/>
+            <circle cx="260" cy="115" r="8" class="point"/>
+            <circle cx="410" cy="212" r="8" class="point"/>
+            <circle cx="560" cy="240" r="8" class="point"/>
+            <rect x="115" y="72" width="485" height="210" rx="18" class="known"/>
+            <text x="330" y="65" class="svg-label">região observada</text>
+          </svg>
+        </div>
+      </section>
+
+      <section data-auto-animate>
+        <p class="section-label">Extrapolação</p>
+        <h2 data-id="iex-title">Extrapolar é prever fora da experiência disponível</h2>
+        <div class="chart-card" data-id="chart">
+          <svg viewBox="0 0 780 360" role="img" aria-label="Extrapolação">
+            <line x1="60" y1="310" x2="740" y2="310" class="axis"/>
+            <line x1="60" y1="310" x2="60" y2="40" class="axis"/>
+            <path d="M70 245 C160 120, 260 100, 350 175 S540 270, 690 105" class="curve"/>
+            <circle cx="135" cy="165" r="8" class="point"/>
+            <circle cx="260" cy="115" r="8" class="point"/>
+            <circle cx="410" cy="212" r="8" class="point"/>
+            <circle cx="560" cy="240" r="8" class="point"/>
+            <rect x="115" y="72" width="485" height="210" rx="18" class="known"/>
+            <rect x="608" y="72" width="105" height="210" rx="18" class="danger"/>
+            <text x="623" y="65" class="svg-label danger-text">fora da amostra</text>
+          </svg>
+        </div>
+        <p class="impact fragment fade-up">Modelos podem interpolar muito bem e extrapolar pessimamente.</p>
+      </section>
+
+      <section>
+        <p class="section-label">Ruído irredutível</p>
+        <h2>Existe erro que nenhum modelo consegue eliminar</h2>
+        <div class="noise-layout">
+          <div class="chart-card small-chart">
+            <svg viewBox="0 0 520 280">
+              <line x1="40" y1="240" x2="490" y2="240" class="axis"/>
+              <line x1="40" y1="240" x2="40" y2="30" class="axis"/>
+              <path d="M45 195 C130 75, 225 85, 315 145 S410 230, 480 70" class="curve"/>
+              <circle cx="110" cy="102" r="7" class="point"/><circle cx="150" cy="141" r="7" class="point noise"/><circle cx="230" cy="84" r="7" class="point"/>
+              <circle cx="315" cy="160" r="7" class="point noise"/><circle cx="390" cy="205" r="7" class="point"/><circle cx="445" cy="118" r="7" class="point noise"/>
+            </svg>
+          </div>
+          <div class="soft-card fragment fade-left">
+            <b>Erro irredutível</b>
+            <p>Vem de variáveis não observadas, medição imperfeita, aleatoriedade do fenômeno ou ambiguidade do alvo.</p>
+            <p><strong>Consequência:</strong> perseguir erro zero pode produzir overfitting.</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <p class="section-label">Mini-checkpoint</p>
+        <h2>Antes de falar em viés e variância</h2>
+        <div class="quiz" data-quiz="risk">
+          <p>Um modelo tem erro de treino quase zero, mas desempenho ruim na validação. Qual hipótese inicial é mais plausível?</p>
+          <button data-answer="wrong">alto viés</button>
+          <button data-answer="right">alta variância / overfitting</button>
+          <button data-answer="wrong">erro irredutível zero</button>
+          <div class="feedback"></div>
+        </div>
+      </section>
+
+      <section>
+        <p class="section-label">1.2 · Viés e variância</p>
+        <h2>O erro de generalização tem componentes diferentes</h2>
+        <div class="decomp">
+          <div class="term fragment fade-up"><b>Erro esperado</b></div>
+          <span class="fragment fade-in">=</span>
+          <div class="term fragment fade-up"><b>Viés²</b><small>erro sistemático</small></div>
+          <span class="fragment fade-in">+</span>
+          <div class="term fragment fade-up"><b>Variância</b><small>sensibilidade aos dados</small></div>
+          <span class="fragment fade-in">+</span>
+          <div class="term fragment fade-up"><b>Ruído</b><small>parte irredutível</small></div>
+        </div>
+        <p class="source">A decomposição viés-variância é tratada em textos clássicos como The Elements of Statistical Learning e nas notas de CS229.</p>
+      </section>
+
+      <section>
+        <p class="section-label">Viés</p>
+        <h2>Alto viés: o modelo erra de forma consistente</h2>
+        <div class="target-grid">
+          <div class="target-card">
+            <div class="target">
+              <span class="bullseye"></span>
+              <i style="left:58%;top:24%"></i><i style="left:61%;top:31%"></i><i style="left:64%;top:35%"></i><i style="left:56%;top:39%"></i><i style="left:60%;top:43%"></i>
+            </div>
+            <b>Alta precisão local, baixa exatidão</b>
+            <p>As previsões se concentram longe do alvo.</p>
+          </div>
+          <div class="soft-card fragment fade-left">
+            <b>Sintomas</b>
+            <ul>
+              <li>erro alto no treino;</li>
+              <li>erro alto na validação;</li>
+              <li>modelo simples demais;</li>
+              <li>pouca capacidade para capturar a estrutura.</li>
+            </ul>
+          </div>
+        </div>
+        <p class="takeaway fragment fade-up">Alto viés é o problema do modelo que “não consegue enxergar a forma do fenômeno”.</p>
+      </section>
+
+      <section>
+        <p class="section-label">Variância</p>
+        <h2>Alta variância: o modelo muda demais conforme a amostra</h2>
+        <div class="target-grid">
+          <div class="target-card">
+            <div class="target">
+              <span class="bullseye"></span>
+              <i style="left:24%;top:18%"></i><i style="left:70%;top:32%"></i><i style="left:41%;top:68%"></i><i style="left:58%;top:44%"></i><i style="left:35%;top:39%"></i>
+            </div>
+            <b>Alta instabilidade</b>
+            <p>O modelo aprende padrões específicos demais da amostra.</p>
+          </div>
+          <div class="soft-card fragment fade-left">
+            <b>Sintomas</b>
+            <ul>
+              <li>erro baixo no treino;</li>
+              <li>erro alto na validação;</li>
+              <li>grande gap treino-validação;</li>
+              <li>sensibilidade a ruído, seed e split.</li>
+            </ul>
+          </div>
+        </div>
+        <p class="takeaway fragment fade-up">Alta variância é o problema do modelo que “confunde detalhe acidental com lei geral”.</p>
+      </section>
+
+      <section>
+        <p class="section-label">Modelo mental</p>
+        <h2>Viés e variância no cotidiano</h2>
+        <div class="analogy four">
+          <div class="student-card fragment fade-up"><span>📏</span><b>Régua torta</b><p>Sempre mede errado na mesma direção.</p><small>alto viés</small></div>
+          <div class="student-card fragment fade-up"><span>🎲</span><b>Trena instável</b><p>Cada medição dá um resultado muito diferente.</p><small>alta variância</small></div>
+          <div class="student-card fragment fade-up"><span>🌫️</span><b>Ambiente ruidoso</b><p>Mesmo com boa régua, há incerteza no fenômeno.</p><small>ruído</small></div>
+          <div class="student-card fragment fade-up"><span>🎯</span><b>Bom instrumento</b><p>Erra pouco e varia pouco.</p><small>boa generalização</small></div>
+        </div>
+      </section>
+
+      <section>
+        <p class="section-label">Trade-off clássico</p>
+        <h2>Complexidade reduz viés, mas pode aumentar variância</h2>
+        <div class="chart-card">
+          <svg viewBox="0 0 820 390" role="img" aria-label="Curva de viés e variância">
+            <line x1="70" y1="330" x2="760" y2="330" class="axis"/>
+            <line x1="70" y1="330" x2="70" y2="50" class="axis"/>
+            <text x="315" y="370" class="svg-label">complexidade do modelo</text>
+            <text x="18" y="195" class="svg-label rotate">erro</text>
+            <path d="M90 80 C210 115, 350 175, 735 310" class="bias-line"/>
+            <path d="M90 310 C220 275, 390 190, 735 80" class="var-line"/>
+            <path d="M95 285 C250 160, 390 120, 525 150 S690 245, 735 300" class="risk-line"/>
+            <text x="610" y="295" class="svg-label bias-text">viés²</text>
+            <text x="620" y="83" class="svg-label var-text">variância</text>
+            <text x="450" y="138" class="svg-label risk-text">erro esperado</text>
+          </svg>
+        </div>
+        <p class="source">A relação entre bias, variance e model complexity é apresentada em ESL, cap. 7, e em CS229 Learning Theory.</p>
+      </section>
+
+      <section>
+        <p class="section-label">Cuidado histórico</p>
+        <h2>O trade-off clássico não explica tudo sozinho</h2>
+        <div class="two-col">
+          <div class="soft-card">
+            <b>Modelos clássicos</b>
+            <p>Muitas vezes exibem curva em U: modelos muito simples e muito complexos generalizam mal.</p>
+          </div>
+          <div class="soft-card fragment fade-left">
+            <b>Modelos superparametrizados</b>
+            <p>Em redes modernas, fenômenos como double descent mostram que a história pode ser mais complexa.</p>
+          </div>
+        </div>
+        <p class="impact fragment fade-up">Teoria boa não é dogma: é uma lente para investigar evidências.</p>
+        <p class="source">Yang et al. discutem como o comportamento de redes superparametrizadas desafia a curva clássica em U.</p>
+      </section>
+
+      <section>
+        <p class="section-label">Interpretação experimental</p>
+        <h2>Como reconhecer viés e variância em resultados?</h2>
+        <table class="diagnosis-table">
+          <thead><tr><th>Sintoma</th><th>Treino</th><th>Validação</th><th>Hipótese inicial</th></tr></thead>
+          <tbody>
+            <tr class="fragment"><td>Ambos ruins</td><td>erro alto</td><td>erro alto</td><td>alto viés / underfitting</td></tr>
+            <tr class="fragment"><td>Gap grande</td><td>erro baixo</td><td>erro alto</td><td>alta variância / overfitting</td></tr>
+            <tr class="fragment"><td>Resultados instáveis</td><td>varia muito</td><td>varia muito</td><td>amostra pequena ou modelo sensível</td></tr>
+            <tr class="fragment"><td>Treino excelente impossível</td><td>perfeito</td><td>perfeito</td><td>suspeita de vazamento</td></tr>
+          </tbody>
+        </table>
+        <p class="source">A documentação do scikit-learn interpreta learning/validation curves para diagnosticar underfitting e overfitting.</p>
+      </section>
+
+      <section>
+        <p class="section-label">1.3 · Capacidade e complexidade</p>
+        <h2>Capacidade é o quanto o modelo consegue se adaptar</h2>
+        <div class="capacity-scale">
+          <div class="cap low fragment fade-up"><b>baixa</b><span>reta simples</span></div>
+          <div class="cap mid fragment fade-up"><b>moderada</b><span>curva suave</span></div>
+          <div class="cap high fragment fade-up"><b>alta</b><span>curva muito flexível</span></div>
+        </div>
+        <p class="impact fragment fade-up">Capacidade demais permite aprender o sinal — e também o ruído.</p>
+        <p class="source">Goodfellow, Bengio e Courville tratam capacidade, overfitting, underfitting e regularização como conceitos centrais para generalização.</p>
+      </section>
+
+      <section>
+        <p class="section-label">Graus de liberdade</p>
+        <h2>Complexidade não é só “número de linhas de código”</h2>
+        <div class="metric-grid">
+          <div class="metric-card fragment fade-up"><b>Parâmetros efetivos</b><span>quantos ajustes reais o modelo consegue fazer?</span></div>
+          <div class="metric-card fragment fade-up"><b>Profundidade</b><span>quantas interações e decisões sucessivas?</span></div>
+          <div class="metric-card fragment fade-up"><b>Regularização</b><span>quanto restringimos a solução?</span></div>
+          <div class="metric-card fragment fade-up"><b>Representação</b><span>quais atributos estão disponíveis?</span></div>
+        </div>
+        <p class="takeaway fragment fade-up">Complexidade é uma propriedade do conjunto: modelo + dados + representação + restrições.</p>
+      </section>
+
+      <section>
+        <p class="section-label">Regularização</p>
+        <h2>Regularizar é limitar liberdade para ganhar generalização</h2>
+        <div class="reg-diagram">
+          <div class="reg-box">Modelo flexível</div>
+          <div class="reg-arrow">+</div>
+          <div class="reg-box accent">Restrição</div>
+          <div class="reg-arrow">→</div>
+          <div class="reg-box">Menos variância</div>
+        </div>
+        <div class="two-col mt-md">
+          <div class="soft-card fragment fade-up"><b>Exemplos</b><p>Ridge, Lasso, dropout, early stopping, data augmentation, poda.</p></div>
+          <div class="soft-card fragment fade-up"><b>Ideia</b><p>Trocar um pouco de viés por redução de variância.</p></div>
+        </div>
+        <p class="source">Deep Learning Book define regularização como modificação do algoritmo para reduzir erro de generalização, não apenas erro de treino.</p>
+      </section>
+
+      <section>
+        <p class="section-label">Curvas de validação</p>
+        <h2>Complexidade deve ser medida contra validação, não contra treino</h2>
+        <div class="chart-card">
+          <svg viewBox="0 0 820 390">
+            <line x1="70" y1="330" x2="760" y2="330" class="axis"/>
+            <line x1="70" y1="330" x2="70" y2="50" class="axis"/>
+            <text x="300" y="370" class="svg-label">hiperparâmetro de complexidade</text>
+            <path d="M90 300 C210 260, 350 190, 735 75" class="train-line"/>
+            <path d="M90 310 C240 180, 420 145, 570 205 S690 280, 735 310" class="valid-line"/>
+            <text x="600" y="80" class="svg-label train-text">treino</text>
+            <text x="610" y="280" class="svg-label valid-text">validação</text>
+            <line x1="445" y1="330" x2="445" y2="120" class="dash"/>
+            <text x="385" y="112" class="svg-label">região promissora</text>
+          </svg>
+        </div>
+        <p class="source">scikit-learn: validation curves ajudam a visualizar subajuste e sobreajuste ao variar um hiperparâmetro.</p>
+      </section>
+
+      <section>
+        <p class="section-label">Curvas de aprendizado</p>
+        <h2>Às vezes o melhor hiperparâmetro é “mais dados”</h2>
+        <div class="chart-card">
+          <svg viewBox="0 0 820 390">
+            <line x1="70" y1="330" x2="760" y2="330" class="axis"/>
+            <line x1="70" y1="330" x2="70" y2="50" class="axis"/>
+            <text x="320" y="370" class="svg-label">tamanho do treino</text>
+            <text x="22" y="195" class="svg-label rotate">score</text>
+            <path d="M90 285 C220 210, 360 170, 735 150" class="valid-line"/>
+            <path d="M90 70 C250 105, 420 130, 735 145" class="train-line"/>
+            <text x="600" y="148" class="svg-label train-text">treino</text>
+            <text x="600" y="190" class="svg-label valid-text">validação</text>
+            <path d="M710 149 L710 185" class="gap"/>
+          </svg>
+        </div>
+        <p class="takeaway fragment fade-up">Learning curves respondem: “o modelo melhoraria com mais dados?”</p>
+      </section>
+
+      <section>
+        <p class="section-label">Tamanho da amostra</p>
+        <h2>Mais dados ajudam quando o gargalo é variância — não quando o modelo é incapaz</h2>
+        <div class="two-col">
+          <div class="soft-card good fragment fade-right"><b>Ajuda muito</b><p>Modelo flexível, gap grande entre treino e validação, pouca cobertura da população.</p></div>
+          <div class="soft-card warn fragment fade-left"><b>Ajuda pouco</b><p>Modelo subajustado, atributos insuficientes, métrica errada ou ruído irredutível dominante.</p></div>
+        </div>
+        <p class="impact fragment fade-up">“Colete mais dados” é uma hipótese de intervenção, não uma resposta automática.</p>
+      </section>
+
+      <section>
+        <p class="section-label">1.4 · Diagnóstico</p>
+        <h2>Quando o modelo falha, o erro pode estar em quatro lugares</h2>
+        <div class="diag-wheel">
+          <div class="diag fragment fade-up"><b>Dados</b><span>amostra, ruído, rótulo, distribuição, atributos</span></div>
+          <div class="diag fragment fade-up"><b>Modelo</b><span>capacidade, hipótese, regularização</span></div>
+          <div class="diag fragment fade-up"><b>Otimização</b><span>convergência, taxa, inicialização</span></div>
+          <div class="diag fragment fade-up"><b>Avaliação</b><span>métrica, split, vazamento</span></div>
+        </div>
+        <p class="takeaway fragment fade-up">Antes de trocar o algoritmo, pergunte: “qual evidência aponta para essa troca?”</p>
+      </section>
+
+      <section>
+        <p class="section-label">Problemas de dados</p>
+        <h2>Um modelo não supera sistematicamente a qualidade do sinal que recebe</h2>
+        <div class="problem-grid">
+          <div class="problem fragment"><b>Ruído</b><span>variáveis omitidas, medição instável, fenômeno aleatório</span></div>
+          <div class="problem fragment"><b>Rótulos ruins</b><span>anotadores discordam, alvo mal definido, erro humano</span></div>
+          <div class="problem fragment"><b>Amostra insuficiente</b><span>poucos exemplos para cobrir a variabilidade</span></div>
+          <div class="problem fragment"><b>Distribuição diferente</b><span>treino e operação pertencem a contextos distintos</span></div>
+          <div class="problem fragment"><b>Atributos insuficientes</b><span>o sinal necessário não está em X</span></div>
+        </div>
+      </section>
+
+      <section>
+        <p class="section-label">Problemas de modelo</p>
+        <h2>Às vezes o modelo falha porque sua hipótese é inadequada</h2>
+        <div class="problem-grid two">
+          <div class="problem fragment"><b>Capacidade baixa</b><span>modelo simples demais para o padrão real.</span></div>
+          <div class="problem fragment"><b>Capacidade alta</b><span>modelo flexível demais para os dados disponíveis.</span></div>
+          <div class="problem fragment"><b>Hipótese incompatível</b><span>escolha de família de funções não representa o fenômeno.</span></div>
+          <div class="problem fragment"><b>Regularização excessiva</b><span>restrição impede que o modelo capture estrutura útil.</span></div>
+        </div>
+        <p class="impact fragment fade-up">Trocar algoritmo sem entender a hipótese é como trocar remédio sem diagnóstico.</p>
+      </section>
+
+      <section>
+        <p class="section-label">Problemas de otimização</p>
+        <h2>O melhor modelo do espaço pode existir — e não ter sido encontrado</h2>
+        <div class="loss-surface">
+          <svg viewBox="0 0 820 380">
+            <path d="M60 300 C160 210, 230 250, 310 170 S430 90, 520 160 S645 315, 760 85" class="surface"/>
+            <circle cx="185" cy="227" r="9" class="point noise"/>
+            <circle cx="505" cy="156" r="9" class="point"/>
+            <text x="155" y="205" class="svg-label danger-text">parou cedo</text>
+            <text x="470" y="135" class="svg-label">melhor região</text>
+          </svg>
+        </div>
+        <div class="three-mini">
+          <span class="fragment">não convergência</span>
+          <span class="fragment">taxa de aprendizado inadequada</span>
+          <span class="fragment">inicialização ruim</span>
+        </div>
+      </section>
+
+      <section>
+        <p class="section-label">Problemas de avaliação</p>
+        <h2>Resultados excelentes podem ser artefatos do experimento</h2>
+        <div class="evaluation-cards">
+          <div class="eval-card fragment"><b>Métrica inadequada</b><p>O número otimizado não representa o custo real do erro.</p></div>
+          <div class="eval-card fragment"><b>Divisão incorreta</b><p>Treino e teste não simulam a situação operacional.</p></div>
+          <div class="eval-card fragment"><b>Vazamento</b><p>Informação do futuro ou do alvo entra no treinamento.</p></div>
+        </div>
+        <p class="source">A documentação do scikit-learn alerta para overfitting e recomenda avaliação com dados não vistos por validação cruzada.</p>
+      </section>
+
+      <section data-auto-animate>
+        <p class="section-label">Data leakage</p>
+        <h2 data-id="leak-title">Vazamento é quando o modelo cola na prova</h2>
+        <div class="leak-flow" data-id="leak-flow">
+          <div>Dados brutos</div><span>→</span><div>Pré-processamento</div><span>→</span><div>Split</div><span>→</span><div>Treino/Teste</div>
+        </div>
+        <p class="danger-note fragment fade-up">Exemplo incorreto: normalizar usando média e desvio calculados em todos os dados antes do split.</p>
+      </section>
+
+      <section data-auto-animate>
+        <p class="section-label">Data leakage</p>
+        <h2 data-id="leak-title">O pipeline correto protege a avaliação</h2>
+        <div class="leak-flow safe" data-id="leak-flow">
+          <div>Dados brutos</div><span>→</span><div>Split</div><span>→</span><div>Fit transform no treino</div><span>→</span><div>Transform no teste</div>
+        </div>
+        <p class="takeaway fragment fade-up">O teste deve representar o futuro: ele não pode participar de decisões de treinamento.</p>
+      </section>
+
+      <section>
+        <p class="section-label">Checklist diagnóstico</p>
+        <h2>Antes de mudar o algoritmo, investigue</h2>
+        <div class="checklist">
+          <div class="check fragment"><b>1</b><span>O erro de treino está alto ou baixo?</span></div>
+          <div class="check fragment"><b>2</b><span>O erro de validação está próximo ou distante?</span></div>
+          <div class="check fragment"><b>3</b><span>O resultado muda muito com outro split ou seed?</span></div>
+          <div class="check fragment"><b>4</b><span>A métrica representa a decisão real?</span></div>
+          <div class="check fragment"><b>5</b><span>O pipeline evita vazamento?</span></div>
+          <div class="check fragment"><b>6</b><span>O modelo convergiu?</span></div>
+        </div>
+      </section>
+
+      <section>
+        <p class="section-label">Laboratório central</p>
+        <h2>Diagnóstico de modelos: cinco cenários artificiais</h2>
+        <div class="lab-grid">
+          <div class="lab-card fragment"><b>Underfitting</b><span>modelo simples demais</span></div>
+          <div class="lab-card fragment"><b>Overfitting</b><span>modelo flexível demais</span></div>
+          <div class="lab-card fragment"><b>Falta de dados</b><span>alta instabilidade</span></div>
+          <div class="lab-card fragment"><b>Ruído</b><span>erro irredutível</span></div>
+          <div class="lab-card fragment"><b>Data leakage</b><span>resultado bom demais</span></div>
+        </div>
+        <p class="impact fragment fade-up">O desafio: diagnosticar apenas pelos resultados, curvas e comportamento experimental.</p>
+      </section>
+
+      <section>
+        <p class="section-label">Lab · Parte 1</p>
+        <h2>Cenário A — Underfitting fabricado</h2>
+        <div class="lab-layout">
+          <div class="code-card"><pre><code class="language-python" data-trim>from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+
+# y tem relação não linear
+# mas o modelo recebe apenas grau 1
+model = LinearRegression()</code></pre></div>
+          <div class="soft-card fragment fade-left"><b>Pistas esperadas</b><ul><li>erro alto no treino;</li><li>erro alto na validação;</li><li>resíduos com padrão;</li><li>curva simples demais.</li></ul></div>
+        </div>
+      </section>
+
+      <section>
+        <p class="section-label">Lab · Parte 2</p>
+        <h2>Cenário B — Overfitting fabricado</h2>
+        <div class="lab-layout">
+          <div class="code-card"><pre><code class="language-python" data-trim>PolynomialFeatures(degree=25)
+LinearRegression()
+
+# poucos dados + modelo muito flexível
+# resultado ótimo no treino</code></pre></div>
+          <div class="soft-card fragment fade-left"><b>Pistas esperadas</b><ul><li>erro de treino muito baixo;</li><li>validação ruim;</li><li>gap grande;</li><li>curva instável.</li></ul></div>
+        </div>
+      </section>
+
+      <section>
+        <p class="section-label">Lab · Parte 3</p>
+        <h2>Cenário C — Falta de dados</h2>
+        <div class="lab-layout">
+          <div class="code-card"><pre><code class="language-python" data-trim>for n in [20, 50, 100, 500, 2000]:
+    X_train = X[:n]
+    y_train = y[:n]
+    # medir treino e validação</code></pre></div>
+          <div class="soft-card fragment fade-left"><b>Pistas esperadas</b><ul><li>variação grande entre execuções;</li><li>validação melhora com n;</li><li>gap tende a reduzir;</li><li>learning curve ainda não saturou.</li></ul></div>
+        </div>
+      </section>
+
+      <section>
+        <p class="section-label">Lab · Parte 4</p>
+        <h2>Cenário D — Ruído elevado</h2>
+        <div class="lab-layout">
+          <div class="code-card"><pre><code class="language-python" data-trim>noise = np.random.normal(0, sigma, size=n)
+y = f_true(X) + noise
+
+# aumentar sigma e observar limite do erro</code></pre></div>
+          <div class="soft-card fragment fade-left"><b>Pistas esperadas</b><ul><li>erro não desaparece;</li><li>mais complexidade não resolve;</li><li>resíduos espalhados;</li><li>limite de desempenho.</li></ul></div>
+        </div>
+      </section>
+
+      <section>
+        <p class="section-label">Lab · Parte 5</p>
+        <h2>Cenário E — Vazamento de dados</h2>
+        <div class="lab-layout">
+          <div class="code-card"><pre><code class="language-python" data-trim># erro proposital:
+X["target_encoded"] = y.groupby(category).transform("mean")
+
+# atributo criado usando informação do alvo
+# antes do split</code></pre></div>
+          <div class="soft-card fragment fade-left"><b>Pistas esperadas</b><ul><li>resultado bom demais;</li><li>teste quase perfeito;</li><li>não replica em produção;</li><li>atributo suspeito.</li></ul></div>
+        </div>
+      </section>
+
+      <section>
+        <p class="section-label">Atividade em sala</p>
+        <h2>Relatório de diagnóstico</h2>
+        <div class="report-template">
+          <div class="fragment"><b>1. Sintoma observado</b><span>Quais curvas, métricas ou diferenças chamam atenção?</span></div>
+          <div class="fragment"><b>2. Hipótese de causa</b><span>Dados, modelo, otimização ou avaliação?</span></div>
+          <div class="fragment"><b>3. Evidência</b><span>Qual resultado sustenta essa hipótese?</span></div>
+          <div class="fragment"><b>4. Intervenção</b><span>O que você testaria a seguir?</span></div>
+        </div>
+      </section>
+
+      <section>
+        <p class="section-label">Discussão</p>
+        <h2>O que fazer em cada diagnóstico?</h2>
+        <table class="diagnosis-table compact">
+          <thead><tr><th>Diagnóstico</th><th>Intervenções possíveis</th></tr></thead>
+          <tbody>
+            <tr class="fragment"><td>Alto viés</td><td>mais atributos, modelo mais flexível, menor regularização, melhor representação</td></tr>
+            <tr class="fragment"><td>Alta variância</td><td>mais dados, regularização, simplificar modelo, validação mais robusta</td></tr>
+            <tr class="fragment"><td>Ruído alto</td><td>melhorar coleta, redefinir alvo, estimar incerteza, aceitar limite</td></tr>
+            <tr class="fragment"><td>Vazamento</td><td>refazer pipeline, split correto, auditar atributos e transformação</td></tr>
+            <tr class="fragment"><td>Otimização</td><td>ajustar taxa, épocas, inicialização, critério de convergência</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <p class="section-label">Síntese</p>
+        <h2>A linguagem que usaremos no semestre inteiro</h2>
+        <div class="synthesis-grid">
+          <div class="syn fragment fade-up"><b>Generalização</b><span>não basta ir bem no treino</span></div>
+          <div class="syn fragment fade-up"><b>Risco empírico</b><span>o que conseguimos medir</span></div>
+          <div class="syn fragment fade-up"><b>Risco esperado</b><span>o que realmente gostaríamos de saber</span></div>
+          <div class="syn fragment fade-up"><b>Viés</b><span>erro por simplicidade/inadequação</span></div>
+          <div class="syn fragment fade-up"><b>Variância</b><span>erro por instabilidade</span></div>
+          <div class="syn fragment fade-up"><b>Diagnóstico</b><span>decidir com evidência</span></div>
+        </div>
+      </section>
+
+      <section>
+        <p class="section-label">Fechamento</p>
+        <h2>O modelo que mais aprende não é o que mais memoriza</h2>
+        <div class="quote-box wide">
+          <p>Um experimento de Machine Learning deve responder: “qual evidência sustenta que este modelo funcionará fora da amostra?”</p>
+        </div>
+        <p class="next-step fragment fade-up">Próxima unidade: regressão como laboratório matemático para estudar erro, ajuste, resíduos e regularização.</p>
+      </section>
+
+      <section>
+        <p class="section-label">Referências essenciais</p>
+        <h2>Fontes utilizadas na unidade</h2>
+        <div class="refs">
+          <p><b>Vapnik, V.</b> The Nature of Statistical Learning Theory. Springer.</p>
+          <p><b>Hastie, Tibshirani & Friedman.</b> The Elements of Statistical Learning. Springer.</p>
+          <p><b>Stanford CS229.</b> Learning Theory and bias/variance lecture notes.</p>
+          <p><b>Goodfellow, Bengio & Courville.</b> Deep Learning — chapters on generalization and regularization.</p>
+          <p><b>scikit-learn.</b> Documentation on validation curves, learning curves, underfitting and overfitting.</p>
+        </div>
+      </section>
+
+      <section>
+        <p class="section-label">Referências complementares</p>
+        <h2>Para aprofundar</h2>
+        <div class="refs two-col-refs">
+          <p><b>Murphy, K.</b> Probabilistic Machine Learning: An Introduction.</p>
+          <p><b>Shalev-Shwartz & Ben-David.</b> Understanding Machine Learning: From Theory to Algorithms.</p>
+          <p><b>Yang et al.</b> Rethinking Bias-Variance Trade-off for Generalization of Neural Networks.</p>
+          <p><b>scikit-learn.</b> Cross-validation and model selection user guide.</p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/highlight/highlight.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/math/math.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/search/search.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/zoom/zoom.js"></script>
+  <script src="./js/slides.js"></script>
+</body>
+</html>
