@@ -1,56 +1,41 @@
-# Unidade 1 — Fundamentos teóricos da aprendizagem
+# Aprendizagem de Máquina — Unidades
 
-Apresentação em Reveal.js para a disciplina Aprendizagem de Máquina.
+Site estático da disciplina Aprendizagem de Máquina, com catálogo central e apresentações Reveal.js por unidade.
 
-## Como executar
+## Unidades publicadas
 
-Abra o arquivo `index.html` em um navegador moderno ou execute um servidor local:
+- [Unidade 1 — Fundamentos teóricos da aprendizagem](./unidade-1/)
+- [Unidade 2 — Regressão](./unidade-2/)
+
+O catálogo fica em `index.html`. Cada unidade mantém sua apresentação e seus recursos próprios em uma pasta independente.
+
+## Executar localmente
+
+Na raiz do repositório, execute:
 
 ```bash
-python -m http.server 8000
+python3 -m http.server 8000
 ```
 
 Depois acesse:
 
 ```text
-http://localhost:8000
+http://localhost:8000/
 ```
 
-## Estrutura
+Não use `file://` para validar navegação ou caminhos. Para simular o subcaminho do GitHub Pages, sirva o diretório pai e acesse `http://localhost:8000/ml-ia-unimar-2026/`.
 
-```text
-index.html
-css/custom.css
-js/slides.js
-PUBLICAR_GITHUB_PAGES.md
-.nojekyll
-.gitignore
+## Verificar a preservação das apresentações
+
+```bash
+python3 scripts/verify-presentation-integrity.py
 ```
 
-## Publicar no GitHub Pages
+O verificador confere os arquivos imutáveis, as regiões de slides e as contagens de seções das Unidades 1 e 2.
 
-O projeto já está preparado para publicação direta no GitHub Pages, sem etapa de build.
+## Manutenção e publicação
 
-Siga o tutorial em [`PUBLICAR_GITHUB_PAGES.md`](PUBLICAR_GITHUB_PAGES.md).
+- Para incluir uma unidade, siga [`ADICIONAR_UNIDADE.md`](./ADICIONAR_UNIDADE.md).
+- Para publicar pela branch `main` e pasta `/ (root)`, siga [`PUBLICAR_GITHUB_PAGES.md`](./PUBLICAR_GITHUB_PAGES.md).
 
-## Exportar para PDF
-
-Abra:
-
-```text
-http://localhost:8000/index.html?print-pdf
-```
-
-Use a impressão do navegador e salve como PDF, em modo paisagem, com gráficos de fundo habilitados.
-
-## Recursos usados
-
-- Reveal.js
-- KaTeX para fórmulas
-- Highlight.js para código
-- Fragments e Auto-Animate
-- Quiz interativo em JavaScript
-
-## Observação
-
-A apresentação usa CDN para carregar Reveal.js e plugins. Para uso offline, baixe o Reveal.js e ajuste os caminhos no `index.html`.
+O site não usa build, Node.js, backend ou Jekyll. Reveal.js, KaTeX e plugins continuam sendo carregados pela CDN jsDelivr e exigem acesso à internet.

@@ -1,0 +1,92 @@
+body:has(> .unit-shell-nav) {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: 100%;
+  height: 100vh;
+  min-height: 100vh;
+  margin: 0;
+  overflow: hidden;
+}
+
+.unit-shell-nav {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 44px;
+  padding: env(safe-area-inset-top, 0) max(12px, env(safe-area-inset-right, 0)) 0 max(12px, env(safe-area-inset-left, 0));
+  align-items: center;
+  border-bottom: 1px solid #b9d2e2;
+  background: #f8fbfd;
+  box-shadow: 0 1px 3px rgba(23, 63, 95, 0.08);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.unit-shell-link {
+  display: inline-flex;
+  min-height: 44px;
+  padding-inline: 8px;
+  align-items: center;
+  gap: 0.5rem;
+  color: #173f5f;
+  font-size: 1rem;
+  font-weight: 650;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.unit-shell-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.unit-shell-link:focus-visible {
+  border-radius: 0.25rem;
+  outline: 3px solid #173f5f;
+  outline-offset: 2px;
+}
+
+body:has(> .unit-shell-nav) > .reveal {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+:fullscreen .unit-shell-nav,
+:-webkit-full-screen .unit-shell-nav {
+  display: none;
+}
+
+:fullscreen body:has(> .unit-shell-nav),
+:-webkit-full-screen body:has(> .unit-shell-nav) {
+  display: block;
+  height: 100%;
+  min-height: 100%;
+}
+
+:fullscreen body:has(> .unit-shell-nav) > .reveal,
+:-webkit-full-screen body:has(> .unit-shell-nav) > .reveal,
+.reveal:fullscreen,
+.reveal:-webkit-full-screen {
+  width: 100%;
+  height: 100%;
+}
+
+@media print {
+  body:has(> .unit-shell-nav) {
+    display: block;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .unit-shell-nav {
+    display: none !important;
+  }
+
+  body:has(> .unit-shell-nav) > .reveal {
+    width: 100%;
+    height: auto;
+    min-height: 0;
+  }
+}

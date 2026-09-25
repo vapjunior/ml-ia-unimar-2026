@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Unidade 2 — Regressão | Aprendizagem de Máquina</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reset.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/theme/white.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/highlight/monokai.css">
+  <link rel="stylesheet" href="css/custom.css">
+  <link rel="stylesheet" href="../assets/unit-shell.css">
+</head>
+<body>
+<nav class="unit-shell-nav" aria-label="Navegação da unidade">
+  <a class="unit-shell-link" href="../" aria-label="Voltar ao catálogo de unidades"><span aria-hidden="true">←</span> Todas as unidades</a>
+</nav>
+<div class="reveal">
+<div class="slides">
+
+<section class="cover" data-background-gradient="linear-gradient(135deg,#eaf3f8 0%,#f8fbfd 45%,#d8e8f2 100%)">
+  <p class="eyebrow">Aprendizagem de Máquina • 4º semestre</p>
+  <h1>Unidade 2<br><span>Regressão</span></h1>
+  <p class="subtitle">Da reta de mínimos quadrados à regularização, diagnóstico e interpretação</p>
+  <div class="cover-line"></div>
+  <p class="small muted">Carga sugerida: 15 aulas • 2,5 semanas</p>
+  <aside class="notes">Abrir deixando claro que esta unidade é a primeira grande família de modelos estudada no semestre: previsão de valores contínuos, interpretação e diagnóstico.</aside>
+</section>
+
+<section>
+  <p class="section-label">Questão orientadora</p>
+  <h2>Quando uma reta é uma boa explicação — e quando ela é só uma simplificação perigosa?</h2>
+  <div class="quote fragment fade-up">“Regressão não é apenas prever números. É transformar uma hipótese sobre o mundo em uma função que pode ser testada.”</div>
+  <aside class="notes">Conectar com a unidade anterior: generalização. Uma regressão boa no treino não necessariamente generaliza.</aside>
+</section>
+
+<section>
+  <h2>Mapa da unidade</h2>
+  <div class="timeline-grid">
+    <div class="timeline-card fragment fade-up"><span>1</span><strong>Linear simples</strong><em>reta, resíduos, custo</em></div>
+    <div class="timeline-card fragment fade-up"><span>2</span><strong>Múltipla</strong><em>matrizes, coeficientes</em></div>
+    <div class="timeline-card fragment fade-up"><span>3</span><strong>Polinomial</strong><em>features e capacidade</em></div>
+    <div class="timeline-card fragment fade-up"><span>4</span><strong>Regularização</strong><em>Ridge, Lasso, Elastic Net</em></div>
+    <div class="timeline-card fragment fade-up"><span>5</span><strong>Métricas</strong><em>erro e decisão</em></div>
+    <div class="timeline-card fragment fade-up"><span>6</span><strong>Diagnóstico</strong><em>resíduos e colinearidade</em></div>
+  </div>
+</section>
+
+<section>
+  <h2>Por que regressão importa em IA?</h2>
+  <div class="two-col">
+    <div>
+      <p>Nem todo problema é “qual classe?”. Muitos problemas centrais perguntam:</p>
+      <ul>
+        <li class="fragment">qual será o preço?</li>
+        <li class="fragment">qual será a demanda?</li>
+        <li class="fragment">quanto tempo levará?</li>
+        <li class="fragment">qual será o risco esperado?</li>
+        <li class="fragment">qual nota, custo, valor ou probabilidade estimada?</li>
+      </ul>
+    </div>
+    <div class="concept-card fragment fade-left">
+      <strong>Regressão</strong>
+      <p>Aprender uma função que estima um valor numérico contínuo.</p>
+      <div class="formula">\[x \longmapsto \hat y\]</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="section-label">História rápida</p>
+  <h2>Mínimos quadrados nasceu antes do “Machine Learning”</h2>
+  <div class="history-line">
+    <div class="history-item fragment fade-up"><span>1805</span><strong>Legendre</strong><p>Publica o método dos mínimos quadrados.</p></div>
+    <div class="history-item fragment fade-up"><span>1808/1809</span><strong>Gauss</strong><p>Aplica e fundamenta o método em astronomia.</p></div>
+    <div class="history-item fragment fade-up"><span>século XX</span><strong>Estatística</strong><p>Regressão vira ferramenta central de modelagem.</p></div>
+    <div class="history-item fragment fade-up"><span>século XXI</span><strong>ML</strong><p>Regressão é baseline, componente e diagnóstico.</p></div>
+  </div>
+  <p class="source">Fonte: Hall, Nature, 1872; Hastie, Tibshirani & Friedman, 2009.</p>
+</section>
+
+<section>
+  <h2>Ideia central</h2>
+  <div class="big-center">
+    <div class="formula-large">\[y = f(x) + \varepsilon\]</div>
+    <p class="fragment">Queremos estimar <strong>f</strong>, sabendo que observamos apenas exemplos imperfeitos.</p>
+  </div>
+  <aside class="notes">O ruído é essencial: regressão não procura passar por todos os pontos; procura estimar uma relação que generalize.</aside>
+</section>
+
+<section class="divider">
+  <p>2.1</p>
+  <h2>Regressão linear simples</h2>
+  <span>Uma entrada, uma saída, uma reta e muitos cuidados</span>
+</section>
+
+<section data-auto-animate>
+  <h2 data-id="rls-title">Regressão linear simples</h2>
+  <div class="formula-large" data-id="rls-formula">\[y = \beta_0 + \beta_1x + \varepsilon\]</div>
+  <div class="legend-row">
+    <div class="legend-box fragment"><strong>\(\beta_0\)</strong><span>intercepto</span></div>
+    <div class="legend-box fragment"><strong>\(\beta_1\)</strong><span>inclinação</span></div>
+    <div class="legend-box fragment"><strong>\(\varepsilon\)</strong><span>erro aleatório</span></div>
+  </div>
+</section>
+
+<section data-auto-animate>
+  <h2 data-id="rls-title">Leitura geométrica</h2>
+  <div class="split-visual">
+    <div class="axis-demo" data-id="rls-formula">
+      <div class="axis-line x"></div><div class="axis-line y"></div>
+      <div class="reg-line"></div>
+      <span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="dot d4"></span><span class="dot d5"></span>
+      <span class="res r1"></span><span class="res r2"></span><span class="res r3"></span>
+    </div>
+    <div>
+      <p>A reta não precisa tocar todos os pontos.</p>
+      <p class="fragment">Ela deve passar pelo “centro” da relação, minimizando uma perda.</p>
+      <div class="quote fragment">O resíduo é a distância entre o que vimos e o que o modelo estimou.</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>O que é um resíduo?</h2>
+  <div class="formula-large">\[e_i = y_i - \hat y_i\]</div>
+  <div class="two-col">
+    <div class="concept-card fragment">
+      <strong>Erro observado</strong>
+      <p>Diferença entre valor real e previsão para um exemplo.</p>
+    </div>
+    <div class="concept-card fragment">
+      <strong>Sinal de diagnóstico</strong>
+      <p>O padrão dos resíduos revela se o modelo está “errando com estrutura”.</p>
+    </div>
+  </div>
+  <p class="source">Fonte: Kim, 2019, sobre análise residual em regressão linear.</p>
+</section>
+
+<section>
+  <h2>Mínimos quadrados</h2>
+  <div class="formula-large">\[\min_{\beta_0,\beta_1}\sum_{i=1}^{n}\left(y_i-\hat y_i\right)^2\]</div>
+  <div class="three-col">
+    <div class="mini-card fragment"><strong>Por que quadrado?</strong><p>Penaliza erros grandes de forma mais forte.</p></div>
+    <div class="mini-card fragment"><strong>Por que soma?</strong><p>Agrega erros de todos os exemplos.</p></div>
+    <div class="mini-card fragment"><strong>Por que mínimo?</strong><p>Escolhe a reta com menor custo total.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Função de custo ≠ métrica final</h2>
+  <div class="two-col">
+    <div class="concept-card">
+      <strong>Durante o treino</strong>
+      <div class="formula">\[\text{RSS}=\sum(y_i-\hat y_i)^2\]</div>
+      <p>O algoritmo ajusta parâmetros minimizando uma função.</p>
+    </div>
+    <div class="concept-card fragment">
+      <strong>Durante a decisão</strong>
+      <p>O negócio pode se importar com outro tipo de erro.</p>
+      <p class="tag">Ex.: erro médio em R$, erro percentual, erro extremo</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Coeficientes: interpretação com responsabilidade</h2>
+  <div class="formula">\[\hat y = \hat\beta_0 + \hat\beta_1x\]</div>
+  <ul>
+    <li class="fragment"><strong>\(\hat\beta_0\)</strong>: valor estimado quando \(x=0\), se isso fizer sentido no domínio.</li>
+    <li class="fragment"><strong>\(\hat\beta_1\)</strong>: variação média estimada em \(y\) para uma unidade adicional em \(x\).</li>
+    <li class="fragment"><strong>Cuidado:</strong> coeficiente não é automaticamente causa.</li>
+  </ul>
+  <div class="quote fragment">Regressão mede associação condicional dentro do modelo, não prova causalidade sozinha.</div>
+</section>
+
+<section>
+  <h2>Exemplo didático: preço de imóvel</h2>
+  <div class="two-col">
+    <div>
+      <p>Queremos estimar:</p>
+      <div class="formula">\[\text{preço}=\beta_0+\beta_1\cdot \text{área}+\varepsilon\]</div>
+      <ul>
+        <li class="fragment">Se \(\beta_1 = 5.000\), cada m² adicional aumenta a estimativa em R$ 5.000.</li>
+        <li class="fragment">Mas isso depende da amostra, região, padrão do imóvel e variáveis omitidas.</li>
+      </ul>
+    </div>
+    <div class="analogy fragment">
+      <strong>Analogia</strong>
+      <p>A reta é como uma régua flexível: útil para medir tendências, perigosa quando o terreno é curvo.</p>
+    </div>
+  </div>
+</section>
+
+<section class="divider">
+  <p>2.2</p>
+  <h2>Regressão múltipla</h2>
+  <span>Quando a explicação depende de vários atributos ao mesmo tempo</span>
+</section>
+
+<section>
+  <h2>Dois ou mais preditores</h2>
+  <div class="formula-large">\[\hat y = \beta_0 + \beta_1x_1+\beta_2x_2+\cdots+\beta_px_p\]</div>
+  <div class="quote fragment">Agora cada coeficiente é lido “mantendo os demais atributos constantes”.</div>
+  <p class="fragment">Essa interpretação condicional é poderosa — e frequentemente mal utilizada.</p>
+</section>
+
+<section>
+  <h2>Formulação matricial</h2>
+  <div class="formula-large">\[\mathbf y=X\boldsymbol{\beta}+\boldsymbol{\varepsilon}\]</div>
+  <div class="matrix-demo fragment">
+    <div><strong>\(X\)</strong><span>matriz de desenho<br>n exemplos × p atributos</span></div>
+    <div><strong>\(\boldsymbol{\beta}\)</strong><span>vetor de parâmetros</span></div>
+    <div><strong>\(\mathbf y\)</strong><span>vetor de respostas</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>A solução analítica</h2>
+  <div class="formula-large">\[\hat\beta=(X^TX)^{-1}X^T\mathbf y\]</div>
+  <ul>
+    <li class="fragment">Funciona quando \(X^TX\) é invertível.</li>
+    <li class="fragment">Explica a relação entre álgebra linear e mínimos quadrados.</li>
+    <li class="fragment">Na prática, bibliotecas usam métodos numericamente mais estáveis.</li>
+  </ul>
+  <p class="source">Fonte: Hastie, Tibshirani & Friedman, 2009; scikit-learn Linear Models.</p>
+</section>
+
+<section>
+  <h2>Pseudoinversa: quando a inversa falha</h2>
+  <div class="two-col">
+    <div>
+      <p>Problemas comuns:</p>
+      <ul>
+        <li class="fragment">atributos redundantes;</li>
+        <li class="fragment">mais atributos que exemplos;</li>
+        <li class="fragment">matriz mal condicionada;</li>
+        <li class="fragment">colinearidade forte.</li>
+      </ul>
+    </div>
+    <div class="concept-card fragment">
+      <strong>Pseudoinversa</strong>
+      <div class="formula">\[\hat\beta = X^{+}\mathbf y\]</div>
+      <p>Generaliza a solução de mínimos quadrados quando a inversa comum não é adequada.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Coeficientes em regressão múltipla</h2>
+  <div class="example-box">
+    <p>Modelo:</p>
+    <div class="formula">\[\text{preço}=\beta_0+\beta_1\text{área}+\beta_2\text{quartos}+\beta_3\text{bairro}\]</div>
+  </div>
+  <p class="fragment">\(\beta_1\) não significa “efeito puro da área” no mundo real.</p>
+  <p class="fragment">Significa: variação estimada pelo modelo para área, <strong>condicionada</strong> aos demais atributos incluídos.</p>
+</section>
+
+<section>
+  <h2>Limitações numéricas e científicas</h2>
+  <div class="two-col">
+    <div class="concept-card fragment">
+      <strong>Numéricas</strong>
+      <p>Escala, condição da matriz, redundância e instabilidade.</p>
+    </div>
+    <div class="concept-card fragment">
+      <strong>Científicas</strong>
+      <p>Variáveis omitidas, amostra enviesada, interpretação causal indevida.</p>
+    </div>
+  </div>
+  <div class="quote fragment">Um coeficiente preciso pode responder uma pergunta mal formulada.</div>
+</section>
+
+<section class="divider">
+  <p>2.3</p>
+  <h2>Regressão polinomial</h2>
+  <span>Mais flexibilidade sem abandonar modelos lineares nos parâmetros</span>
+</section>
+
+<section data-auto-animate>
+  <h2 data-id="poly-title">O truque: transformar atributos</h2>
+  <div class="formula-large" data-id="poly-formula">\[x \longrightarrow (x, x^2, x^3, \ldots, x^d)\]</div>
+  <p class="fragment">O modelo recebe novas representações, mas continua combinando coeficientes linearmente.</p>
+  <p class="source">Fonte: scikit-learn PolynomialFeatures.</p>
+</section>
+
+<section data-auto-animate>
+  <h2 data-id="poly-title">Continua linear nos parâmetros</h2>
+  <div class="formula-large" data-id="poly-formula">\[\hat y=\beta_0+\beta_1x+\beta_2x^2+\beta_3x^3\]</div>
+  <div class="quote fragment">Não é linear em \(x\), mas é linear em \(\beta\).</div>
+  <p class="fragment">Essa distinção é essencial para entender por que ainda podemos usar técnicas de regressão linear.</p>
+</section>
+
+<section>
+  <h2>Capacidade aumenta com o grau</h2>
+  <div class="capacity-steps">
+    <div class="capacity-card fragment"><strong>Grau 1</strong><span>reta</span><em>baixa capacidade</em></div>
+    <div class="capacity-card fragment"><strong>Grau 2</strong><span>curva simples</span><em>maior flexibilidade</em></div>
+    <div class="capacity-card fragment"><strong>Grau 5</strong><span>curvas complexas</span><em>risco de overfitting</em></div>
+    <div class="capacity-card fragment"><strong>Grau 15</strong><span>muito flexível</span><em>pode aprender ruído</em></div>
+  </div>
+</section>
+
+<section>
+  <h2>Representação × modelo</h2>
+  <div class="two-col">
+    <div class="concept-card fragment">
+      <strong>Representação</strong>
+      <p>Como transformamos os dados antes do modelo.</p>
+      <p class="tag">x, x², x³, interações</p>
+    </div>
+    <div class="concept-card fragment">
+      <strong>Modelo</strong>
+      <p>Como combinamos a representação para produzir previsão.</p>
+      <p class="tag">coeficientes lineares</p>
+    </div>
+  </div>
+  <div class="quote fragment">Às vezes, melhorar o modelo começa melhorando a forma de representar o problema.</div>
+</section>
+
+<section>
+  <h2>Overfitting produzido experimentalmente</h2>
+  <div class="chart-card">
+    <div class="curve low"></div><div class="curve high"></div>
+    <span class="dot p1"></span><span class="dot p2"></span><span class="dot p3"></span><span class="dot p4"></span><span class="dot p5"></span>
+  </div>
+  <p class="fragment">A curva muito flexível pode seguir cada ponto — inclusive o ruído.</p>
+  <p class="fragment">Erro de treino cai. Erro de validação pode subir.</p>
+</section>
+
+<section class="divider">
+  <p>2.4</p>
+  <h2>Ridge</h2>
+  <span>Trocar um pouco de viés por estabilidade</span>
+</section>
+
+<section>
+  <h2>Ridge: penalizar coeficientes grandes</h2>
+  <div class="formula-large">\[\min_{\beta}\left[\sum_i(y_i-\hat y_i)^2+\lambda\sum_j\beta_j^2\right]\]</div>
+  <div class="two-col">
+    <div class="mini-card fragment"><strong>1º termo</strong><p>ajuste aos dados</p></div>
+    <div class="mini-card fragment"><strong>2º termo</strong><p>controle de complexidade</p></div>
+  </div>
+  <p class="source">Fonte: Hoerl & Kennard, 1970; scikit-learn Linear Models.</p>
+</section>
+
+<section>
+  <h2>História: Ridge Regression</h2>
+  <div class="history-line compact">
+    <div class="history-item"><span>1970</span><strong>Hoerl & Kennard</strong><p>Ridge Regression: biased estimation for nonorthogonal problems.</p></div>
+    <div class="history-item fragment"><span>ideia</span><strong>Viés controlado</strong><p>Adicionar penalização pode reduzir erro quadrático médio.</p></div>
+    <div class="history-item fragment"><span>hoje</span><strong>ML</strong><p>Regularização é ferramenta central contra overfitting.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Ridge e viés-variância</h2>
+  <div class="balance">
+    <div class="plate fragment"><strong>Menos variância</strong><span>coeficientes menores e mais estáveis</span></div>
+    <div class="beam"></div>
+    <div class="plate fragment"><strong>Mais viés</strong><span>o modelo fica intencionalmente restringido</span></div>
+  </div>
+  <div class="quote fragment">Regularização não “corrige” o modelo; ela impõe uma preferência: soluções mais simples.</div>
+</section>
+
+<section>
+  <h2>Por que padronizar antes da Ridge?</h2>
+  <div class="two-col">
+    <div>
+      <p>A penalização atua sobre coeficientes.</p>
+      <p class="fragment">Se as variáveis têm escalas muito diferentes, a penalização não é comparável.</p>
+    </div>
+    <div class="code-panel fragment">
+<pre><code class="language-python" data-trim>Pipeline([
+    ("scale", StandardScaler()),
+    ("model", Ridge(alpha=1.0))
+])</code></pre>
+    </div>
+  </div>
+  <p class="source">Fonte: scikit-learn Linear Models.</p>
+</section>
+
+<section class="divider">
+  <p>2.5</p>
+  <h2>Lasso</h2>
+  <span>Regularização que pode zerar coeficientes</span>
+</section>
+
+<section>
+  <h2>Lasso: penalização L1</h2>
+  <div class="formula-large">\[\min_{\beta}\left[\sum_i(y_i-\hat y_i)^2+\lambda\sum_j|\beta_j|\right]\]</div>
+  <div class="quote fragment">O Lasso não apenas reduz coeficientes: ele pode remover variáveis do modelo.</div>
+  <p class="source">Fonte: Tibshirani, 1996; scikit-learn Lasso.</p>
+</section>
+
+<section>
+  <h2>Sparsity: modelos mais enxutos</h2>
+  <div class="coef-row">
+    <div class="coef before fragment"><strong>Antes</strong><span>β₁=.8</span><span>β₂=.1</span><span>β₃=-.03</span><span>β₄=.4</span><span>β₅=.02</span></div>
+    <div class="arrow fragment">→</div>
+    <div class="coef after fragment"><strong>Lasso</strong><span>β₁=.7</span><span class="zero">β₂=0</span><span class="zero">β₃=0</span><span>β₄=.3</span><span class="zero">β₅=0</span></div>
+  </div>
+  <p class="fragment">Útil quando queremos seleção implícita de atributos e interpretação mais compacta.</p>
+</section>
+
+<section>
+  <h2>Ridge × Lasso</h2>
+  <table class="clean-table">
+    <thead><tr><th>Aspecto</th><th>Ridge</th><th>Lasso</th></tr></thead>
+    <tbody>
+      <tr class="fragment"><td>Penalização</td><td>L2</td><td>L1</td></tr>
+      <tr class="fragment"><td>Coeficientes</td><td>reduz</td><td>pode zerar</td></tr>
+      <tr class="fragment"><td>Colinearidade</td><td>tende a estabilizar</td><td>pode escolher uma variável</td></tr>
+      <tr class="fragment"><td>Interpretação</td><td>mantém variáveis</td><td>modelo esparso</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Cuidado com “seleção automática”</h2>
+  <ul>
+    <li class="fragment">Lasso pode selecionar variáveis instáveis quando há forte correlação.</li>
+    <li class="fragment">A escolha depende da escala e do valor de \(\lambda\).</li>
+    <li class="fragment">Coeficiente zero não significa “irrelevância científica absoluta”.</li>
+    <li class="fragment">Seleção de variáveis precisa ser avaliada dentro da validação.</li>
+  </ul>
+  <div class="quote fragment">A ausência de uma variável no modelo não é prova de ausência de relação no mundo.</div>
+</section>
+
+<section class="divider">
+  <p>2.6</p>
+  <h2>Elastic Net</h2>
+  <span>Quando Ridge e Lasso trabalham juntos</span>
+</section>
+
+<section>
+  <h2>Elastic Net: L1 + L2</h2>
+  <div class="formula-large smallish">\[\frac{1}{2n}\lVert y-Xw\rVert_2^2+\alpha\rho\lVert w\rVert_1+\frac{\alpha(1-\rho)}{2}\lVert w\rVert_2^2\]</div>
+  <div class="two-col">
+    <div class="mini-card fragment"><strong>\(\rho=1\)</strong><p>comportamento Lasso</p></div>
+    <div class="mini-card fragment"><strong>\(\rho=0\)</strong><p>comportamento Ridge</p></div>
+  </div>
+  <p class="source">Fonte: Zou & Hastie, 2005; scikit-learn ElasticNet.</p>
+</section>
+
+<section>
+  <h2>Quando Elastic Net é útil?</h2>
+  <div class="three-col">
+    <div class="mini-card fragment"><strong>Muitos atributos</strong><p>especialmente quando p é grande.</p></div>
+    <div class="mini-card fragment"><strong>Atributos correlacionados</strong><p>tende a agrupar variáveis relacionadas.</p></div>
+    <div class="mini-card fragment"><strong>Interpretação + estabilidade</strong><p>mistura seleção e regularização.</p></div>
+  </div>
+  <p class="source">Zou & Hastie propõem o Elastic Net como método de shrinkage e seleção com efeito de agrupamento.</p>
+</section>
+
+<section>
+  <h2>Hiperparâmetros da regularização</h2>
+  <div class="two-col">
+    <div class="concept-card fragment">
+      <strong>\(\lambda\) ou alpha</strong>
+      <p>Força total da regularização.</p>
+    </div>
+    <div class="concept-card fragment">
+      <strong>l1_ratio ou \(\rho\)</strong>
+      <p>Mistura entre L1 e L2.</p>
+    </div>
+  </div>
+  <div class="quote fragment">Regularização é uma escolha de modelagem; por isso deve ser escolhida com validação, não com o conjunto de teste.</div>
+</section>
+
+<section class="divider">
+  <p>2.7</p>
+  <h2>Métricas de regressão</h2>
+  <span>A métrica decide o que significa “errar”</span>
+</section>
+
+<section>
+  <h2>MAE: erro absoluto médio</h2>
+  <div class="formula-large">\[MAE=\frac{1}{n}\sum_{i=1}^{n}|y_i-\hat y_i|\]</div>
+  <div class="two-col">
+    <div class="mini-card fragment"><strong>Vantagem</strong><p>mesma unidade do alvo; menos sensível a extremos.</p></div>
+    <div class="mini-card fragment"><strong>Limitação</strong><p>não penaliza fortemente grandes erros.</p></div>
+  </div>
+  <p class="source">Fonte: scikit-learn metrics.</p>
+</section>
+
+<section>
+  <h2>MSE e RMSE</h2>
+  <div class="two-col">
+    <div class="concept-card">
+      <strong>MSE</strong>
+      <div class="formula">\[\frac{1}{n}\sum(y_i-\hat y_i)^2\]</div>
+      <p>penaliza fortemente erros grandes</p>
+    </div>
+    <div class="concept-card fragment">
+      <strong>RMSE</strong>
+      <div class="formula">\[\sqrt{MSE}\]</div>
+      <p>volta para a unidade original de \(y\)</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>\(R^2\): fração da variância explicada</h2>
+  <div class="formula-large">\[R^2=1-\frac{\sum(y_i-\hat y_i)^2}{\sum(y_i-\bar y)^2}\]</div>
+  <ul>
+    <li class="fragment">\(R^2=1\): ajuste perfeito no conjunto avaliado.</li>
+    <li class="fragment">\(R^2=0\): não supera prever a média.</li>
+    <li class="fragment">Pode ser negativo em dados de teste.</li>
+  </ul>
+  <p class="source">Fonte: scikit-learn ElasticNet.score / r2_score.</p>
+</section>
+
+<section>
+  <h2>Erros relativos: cuidado com zeros</h2>
+  <div class="formula-large">\[MAPE=\frac{100\%}{n}\sum\left|\frac{y_i-\hat y_i}{y_i}\right|\]</div>
+  <p class="fragment">Parece intuitivo, mas pode explodir quando \(y_i\) é próximo de zero.</p>
+  <p class="fragment">Em negócios, erros relativos podem ser úteis, mas precisam respeitar o domínio.</p>
+</section>
+
+<section>
+  <h2>Função objetivo × métrica de negócio</h2>
+  <table class="clean-table">
+    <thead><tr><th>Problema</th><th>Métrica técnica</th><th>Pergunta de negócio</th></tr></thead>
+    <tbody>
+      <tr class="fragment"><td>Preço de imóvel</td><td>MAE/RMSE</td><td>Quanto posso errar em reais?</td></tr>
+      <tr class="fragment"><td>Demanda</td><td>RMSE/MAPE</td><td>Qual erro prejudica estoque?</td></tr>
+      <tr class="fragment"><td>Tempo de entrega</td><td>MAE/quantis</td><td>É pior atrasar ou superestimar?</td></tr>
+    </tbody>
+  </table>
+  <div class="quote fragment">A melhor métrica não é a mais elegante. É a que representa melhor o custo do erro.</div>
+</section>
+
+<section class="divider">
+  <p>2.8</p>
+  <h2>Análise de resíduos</h2>
+  <span>O erro fala. O cientista escuta.</span>
+</section>
+
+<section>
+  <h2>Resíduos devem parecer “sem estrutura”</h2>
+  <div class="two-col">
+    <div class="residual-plot ok">
+      <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      <p>bom sinal: dispersão aleatória</p>
+    </div>
+    <div class="residual-plot bad fragment">
+      <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      <p>alerta: padrão nos resíduos</p>
+    </div>
+  </div>
+  <p class="source">Fonte: Kim, 2019; análise residual verifica linearidade, normalidade e variância constante.</p>
+</section>
+
+<section>
+  <h2>Resíduos × valores ajustados</h2>
+  <div class="two-col">
+    <div>
+      <p>Use para investigar:</p>
+      <ul>
+        <li class="fragment">não linearidade;</li>
+        <li class="fragment">heterocedasticidade;</li>
+        <li class="fragment">outliers;</li>
+        <li class="fragment">padrões não capturados pelo modelo.</li>
+      </ul>
+    </div>
+    <div class="concept-card fragment">
+      <strong>Regra visual</strong>
+      <p>Se o resíduo forma desenho, o modelo está deixando informação para trás.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Heterocedasticidade</h2>
+  <div class="formula">\[Var(\varepsilon|X) \text{ não é constante}\]</div>
+  <p class="fragment">Exemplo: erros pequenos em imóveis baratos e erros enormes em imóveis de luxo.</p>
+  <div class="quote fragment">O modelo pode acertar a média e ainda assim errar a incerteza.</div>
+  <p class="source">Fonte: Kim, 2019, sobre igualdade de variância e resíduos.</p>
+</section>
+
+<section>
+  <h2>Normalidade dos resíduos: quando importa?</h2>
+  <div class="two-col">
+    <div class="mini-card fragment"><strong>Previsão</strong><p>normalidade nem sempre é o foco principal.</p></div>
+    <div class="mini-card fragment"><strong>Inferência</strong><p>afeta intervalos, testes e interpretação estatística.</p></div>
+  </div>
+  <p class="fragment">Em Machine Learning, a prioridade costuma ser generalização; em estatística inferencial, pressupostos têm peso maior.</p>
+</section>
+
+<section class="divider">
+  <p>2.9</p>
+  <h2>Colinearidade</h2>
+  <span>Quando variáveis parecem diferentes, mas carregam a mesma informação</span>
+</section>
+
+<section>
+  <h2>O problema da colinearidade</h2>
+  <div class="two-col">
+    <div>
+      <p>Exemplo:</p>
+      <ul>
+        <li class="fragment">área total;</li>
+        <li class="fragment">área útil;</li>
+        <li class="fragment">número de cômodos;</li>
+        <li class="fragment">número de quartos.</li>
+      </ul>
+    </div>
+    <div class="concept-card fragment">
+      <strong>Efeito</strong>
+      <p>O modelo prevê bem, mas os coeficientes podem ficar instáveis e difíceis de interpretar.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>VIF: Variance Inflation Factor</h2>
+  <div class="formula-large">\[VIF_j=\frac{1}{1-R_j^2}\]</div>
+  <p class="fragment">Mede o quanto a variância estimada de um coeficiente aumenta por causa da colinearidade.</p>
+  <p class="fragment">Valores altos indicam que uma variável é explicada pelas outras.</p>
+  <p class="source">Fonte: statsmodels variance_inflation_factor.</p>
+</section>
+
+<section>
+  <h2>Regularização ajuda?</h2>
+  <div class="three-col">
+    <div class="mini-card fragment"><strong>Ridge</strong><p>estabiliza coeficientes sob colinearidade.</p></div>
+    <div class="mini-card fragment"><strong>Lasso</strong><p>pode selecionar apenas uma variável correlacionada.</p></div>
+    <div class="mini-card fragment"><strong>Elastic Net</strong><p>pode favorecer grupos correlacionados.</p></div>
+  </div>
+  <p class="source">Fonte: Hoerl & Kennard, 1970; Zou & Hastie, 2005; scikit-learn Linear Models.</p>
+</section>
+
+<section class="divider">
+  <p>Laboratório principal</p>
+  <h2>Do baseline ao diagnóstico</h2>
+  <span>Regressão real com scikit-learn</span>
+</section>
+
+<section>
+  <h2>Dataset sugerido</h2>
+  <div class="two-col">
+    <div class="concept-card">
+      <strong>California Housing</strong>
+      <p>Dataset de regressão disponível no scikit-learn.</p>
+      <p class="tag">alvo: valor médio de casas</p>
+    </div>
+    <div class="concept-card fragment">
+      <strong>Alternativa</strong>
+      <p>Dataset real da própria área da turma: vendas, tempo, custo, notas, demanda ou preços.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Roteiro do laboratório</h2>
+  <ol class="big-list">
+    <li class="fragment">Definir problema, alvo e unidade de observação.</li>
+    <li class="fragment">Criar baseline simples.</li>
+    <li class="fragment">Treinar regressão linear.</li>
+    <li class="fragment">Adicionar regressão polinomial.</li>
+    <li class="fragment">Comparar Ridge, Lasso e Elastic Net.</li>
+    <li class="fragment">Avaliar métricas e resíduos.</li>
+    <li class="fragment">Diagnosticar erro e colinearidade.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Baseline antes de modelo</h2>
+  <div class="formula-large">\[\hat y = \bar y_{treino}\]</div>
+  <div class="quote fragment">Se seu modelo sofisticado não supera a média, ele não é sofisticado: é ruído com interface bonita.</div>
+</section>
+
+<section>
+  <h2>Pipeline mínimo recomendado</h2>
+  <div class="code-panel wide">
+<pre><code class="language-python" data-trim data-line-numbers="1-4|6-11|13-16">from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler, PolynomialFeatures
+from sklearn.linear_model import Ridge
+
+model = Pipeline([
+    ("poly", PolynomialFeatures(degree=2, include_bias=False)),
+    ("scale", StandardScaler()),
+    ("reg", Ridge(alpha=1.0))
+])
+
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)</code></pre>
+  </div>
+  <p class="source">Fonte: scikit-learn Pipeline e Linear Models.</p>
+</section>
+
+<section>
+  <h2>Comparação esperada</h2>
+  <table class="clean-table compact-table">
+    <thead><tr><th>Modelo</th><th>O que observar</th><th>Risco</th></tr></thead>
+    <tbody>
+      <tr class="fragment"><td>Baseline</td><td>ponto mínimo de comparação</td><td>subestimar dificuldade</td></tr>
+      <tr class="fragment"><td>Linear</td><td>interpretação simples</td><td>underfitting</td></tr>
+      <tr class="fragment"><td>Polinomial</td><td>capacidade maior</td><td>overfitting</td></tr>
+      <tr class="fragment"><td>Ridge</td><td>estabilidade</td><td>regularização excessiva</td></tr>
+      <tr class="fragment"><td>Lasso</td><td>sparsity</td><td>seleção instável</td></tr>
+      <tr class="fragment"><td>Elastic Net</td><td>equilíbrio</td><td>mais hiperparâmetros</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Diagnóstico final do laboratório</h2>
+  <div class="diagnosis-grid">
+    <div class="mini-card fragment"><strong>Erro alto no treino</strong><p>capacidade baixa? atributos ruins?</p></div>
+    <div class="mini-card fragment"><strong>Treino bom, teste ruim</strong><p>overfitting? vazamento? split?</p></div>
+    <div class="mini-card fragment"><strong>Resíduos com padrão</strong><p>relação não modelada.</p></div>
+    <div class="mini-card fragment"><strong>Coeficientes instáveis</strong><p>colinearidade ou escala.</p></div>
+    <div class="mini-card fragment"><strong>RMSE alto, MAE baixo</strong><p>erros extremos dominando.</p></div>
+    <div class="mini-card fragment"><strong>Bom R², ruim para negócio</strong><p>métrica errada.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Checklist de regressão confiável</h2>
+  <ul class="check-list">
+    <li class="fragment">Tenho baseline?</li>
+    <li class="fragment">A métrica representa o custo do erro?</li>
+    <li class="fragment">O pré-processamento está dentro do pipeline?</li>
+    <li class="fragment">Comparei treino e teste?</li>
+    <li class="fragment">Analisei resíduos?</li>
+    <li class="fragment">Investiguei colinearidade?</li>
+    <li class="fragment">Escolhi regularização por validação?</li>
+    <li class="fragment">Consigo explicar as limitações?</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Frases para lembrar</h2>
+  <div class="quote-list">
+    <div class="quote fragment">A reta é uma hipótese, não uma verdade.</div>
+    <div class="quote fragment">Resíduo com padrão é conhecimento que o modelo não capturou.</div>
+    <div class="quote fragment">Regularização é uma forma disciplinada de dizer: “não confie demais no treino”.</div>
+    <div class="quote fragment">A métrica define o que significa errar.</div>
+  </div>
+</section>
+
+<section>
+  <h2>Referências essenciais</h2>
+  <div class="ref-list">
+    <p>Hall, A. <em>Historical Note on the Method of Least Squares</em>. Nature, 1872.</p>
+    <p>Hastie, T.; Tibshirani, R.; Friedman, J. <em>The Elements of Statistical Learning</em>. Springer, 2009.</p>
+    <p>Hoerl, A. E.; Kennard, R. W. <em>Ridge Regression: Biased Estimation for Nonorthogonal Problems</em>. Technometrics, 1970.</p>
+    <p>Tibshirani, R. <em>Regression Shrinkage and Selection via the Lasso</em>. JRSS B, 1996.</p>
+    <p>Zou, H.; Hastie, T. <em>Regularization and Variable Selection via the Elastic Net</em>. JRSS B, 2005.</p>
+    <p>scikit-learn Documentation: Linear Models, PolynomialFeatures, Metrics and Pipeline.</p>
+    <p>statsmodels Documentation: Variance Inflation Factor.</p>
+  </div>
+</section>
+
+<section class="closing" data-background-gradient="linear-gradient(135deg,#173f5f,#2e86ab)">
+  <h2>Encerramento</h2>
+  <p>Regressão é o laboratório perfeito para aprender a pergunta central da disciplina:</p>
+  <div class="quote light">“O modelo está explicando uma relação que generaliza ou apenas ajustando uma superfície conveniente aos dados disponíveis?”</div>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/notes/notes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/highlight/highlight.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/math/math.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/search/search.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/zoom/zoom.js"></script>
+<script src="js/slides.js"></script>
+</body>
+</html>

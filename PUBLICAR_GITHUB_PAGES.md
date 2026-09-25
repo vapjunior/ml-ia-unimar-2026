@@ -1,57 +1,30 @@
 # Publicar no GitHub Pages
 
-Este projeto é uma apresentação estática em Reveal.js. Não precisa de build, Node.js ou backend para ser publicada no GitHub Pages.
+Este projeto é um site estático com um catálogo de unidades e apresentações Reveal.js. Não precisa de build, Node.js, Jekyll ou backend.
 
-## Estrutura esperada
+## Estrutura publicada
 
-Mantenha estes arquivos na raiz do repositório:
+Mantenha na raiz do repositório:
 
 ```text
 index.html
-css/custom.css
-js/slides.js
-REFERENCIAS.md
+assets/
+unidade-1/
+unidade-2/
 README.md
+ADICIONAR_UNIDADE.md
+PUBLICAR_GITHUB_PAGES.md
 .nojekyll
 .gitignore
 ```
 
-O arquivo `.nojekyll` evita que o GitHub Pages processe o site com Jekyll. Isso reduz o risco de alterações automáticas nos arquivos estáticos.
+O arquivo `.nojekyll` deve permanecer na raiz para que os arquivos estáticos sejam publicados diretamente. Cada apresentação mantém seu HTML, CSS, JavaScript, README e referências dentro da pasta da unidade.
 
-## 1. Criar o repositório no GitHub
-
-1. Acesse https://github.com/new.
-2. Defina o nome do repositório, por exemplo:
-
-```text
-ml-unidade1-fundamentos-teoricos
-```
-
-3. Escolha `Public` se quiser usar GitHub Pages gratuitamente em um repositório público.
-4. Não é necessário marcar a opção de criar `README`, `.gitignore` ou licença, porque os arquivos já existem localmente.
-5. Clique em `Create repository`.
-
-## 2. Enviar os arquivos locais
-
-No terminal, dentro desta pasta do projeto, execute:
-
-```bash
-git init
-git add .
-git commit -m "Publica apresentacao da unidade 1"
-git branch -M main
-git remote add origin https://github.com/SEU_USUARIO/ml-unidade1-fundamentos-teoricos.git
-git push -u origin main
-```
-
-Troque `SEU_USUARIO` pelo seu usuário do GitHub. Se escolher outro nome para o repositório, ajuste também a URL.
-
-## 3. Ativar o GitHub Pages
+## Configurar a publicação
 
 1. Abra o repositório no GitHub.
-2. Acesse `Settings`.
-3. No menu lateral, clique em `Pages`.
-4. Em `Build and deployment`, escolha:
+2. Acesse `Settings` e depois `Pages`.
+3. Em `Build and deployment`, escolha:
 
 ```text
 Source: Deploy from a branch
@@ -59,49 +32,54 @@ Branch: main
 Folder: / (root)
 ```
 
-5. Clique em `Save`.
+4. Clique em `Save`.
 
-Depois de alguns minutos, o GitHub mostrará a URL publicada. O endereço normalmente fica neste formato:
+O endereço deste repositório fica normalmente neste formato:
 
 ```text
-https://SEU_USUARIO.github.io/ml-unidade1-fundamentos-teoricos/
+https://vapjunior.github.io/ml-ia-unimar-2026/
 ```
 
-## 4. Conferir a publicação
+A raiz exibe o catálogo. As apresentações ficam em:
 
-Abra a URL do GitHub Pages e teste:
+```text
+https://vapjunior.github.io/ml-ia-unimar-2026/unidade-1/
+https://vapjunior.github.io/ml-ia-unimar-2026/unidade-2/
+```
 
-- navegação dos slides pelas setas do teclado;
-- progresso e numeração dos slides;
-- fórmulas matemáticas;
-- blocos de código com destaque;
-- quiz interativo;
-- busca, zoom e notas do apresentador.
+## Conferir a publicação
 
-## 5. Atualizar depois de publicar
+Depois que o GitHub Pages concluir a publicação:
 
-Sempre que alterar o conteúdo, envie uma nova versão:
+- abra o catálogo e os dois cartões;
+- use “Todas as unidades” para retornar de cada apresentação;
+- confirme que CSS e JavaScript próprios não retornam 404;
+- teste setas, progresso, numeração, fórmulas, destaque, busca, zoom e notas;
+- teste o quiz da Unidade 1;
+- recarregue uma unidade em um fragmento Reveal válido;
+- teste fullscreen e a exportação com `?print-pdf` nas duas unidades.
+
+Exemplos de impressão:
+
+```text
+https://vapjunior.github.io/ml-ia-unimar-2026/unidade-1/?print-pdf
+https://vapjunior.github.io/ml-ia-unimar-2026/unidade-2/?print-pdf
+```
+
+Use a impressão do navegador em modo paisagem, com gráficos de fundo habilitados. A barra “Todas as unidades” não deve aparecer nem deixar espaço residual.
+
+## Atualizar o site
+
+Após validar as alterações:
 
 ```bash
 git add .
-git commit -m "Atualiza conteudo da apresentacao"
+git commit -m "Atualiza unidades de aprendizagem"
 git push
 ```
 
-O GitHub Pages republicará automaticamente a versão nova.
+O GitHub Pages republicará a branch `main` a partir de `/ (root)`. Para acrescentar uma unidade, siga [`ADICIONAR_UNIDADE.md`](./ADICIONAR_UNIDADE.md).
 
-## 6. Exportar para PDF após publicar
+## Limitação externa
 
-Depois que o site estiver no ar, abra:
-
-```text
-https://SEU_USUARIO.github.io/ml-unidade1-fundamentos-teoricos/?print-pdf
-```
-
-Use a impressão do navegador e salve como PDF em modo paisagem, com gráficos de fundo habilitados.
-
-## Observações
-
-- A apresentação carrega Reveal.js, KaTeX e plugins pela CDN jsDelivr.
-- Por isso, a versão publicada precisa de acesso à internet para carregar essas bibliotecas externas.
-- Os arquivos próprios do projeto usam caminhos relativos, então funcionam tanto localmente quanto no GitHub Pages.
+Reveal.js, KaTeX e plugins são carregados pela CDN jsDelivr. A versão publicada precisa de acesso à internet para carregar essas bibliotecas; essa dependência já existia nas apresentações e não foi alterada.
