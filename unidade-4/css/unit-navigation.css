@@ -1,0 +1,21 @@
+/* Integra a barra do catálogo ao modo de rolagem móvel do Reveal. */
+@media screen {
+  body.reveal-scroll:has(> .unit-shell-nav) {
+    display: block;
+  }
+
+  body.reveal-scroll > .unit-shell-nav {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+
+  body:has(> .unit-shell-nav) > #help {
+    top: 54px;
+  }
+
+  :fullscreen body:has(> .unit-shell-nav) > #help,
+  :-webkit-full-screen body:has(> .unit-shell-nav) > #help {
+    top: 10px;
+  }
+}

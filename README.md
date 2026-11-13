@@ -7,6 +7,7 @@ Site estático da disciplina Aprendizagem de Máquina, com catálogo central e a
 - [Unidade 1 — Fundamentos teóricos da aprendizagem](./unidade-1/)
 - [Unidade 2 — Regressão](./unidade-2/)
 - [Unidade 3 — Validação e Seleção de Modelos](./unidade-3/)
+- [Unidade 4 — Séries temporais, previsão e sistemas de recomendação](./unidade-4/)
 
 O catálogo fica em `index.html`. Cada unidade mantém sua apresentação e seus recursos próprios em uma pasta independente.
 
